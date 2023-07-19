@@ -59,8 +59,6 @@ from colorama import Fore, Style
 from prettytable import PrettyTable
 
 # Instantiate the ArubaOS_8 class with the base_url from the variables.py file
-aruba_os8 = ArubaOS_8(variables.aos8api['base_url'])
-
 BEFORE_FILE="before.json"
 AFTER_FILE="after.json"
 
@@ -72,13 +70,13 @@ def get_args():
     group.add_argument('--compare', action='store_true', help='Compare before and after data sets')
     return parser.parse_args()
 
-def get_AP_status():
+def get_AP_status(aruba_os8):
     data = aruba_os8.read_db_json()
     return data
 
 import os
 
-def store_data(filename, is_before=False):
+def store_data(filename, aruba_os8, is_before=False):
     # Ask first before fetching the data
     if is_before and os.path.exists(filename):
         overwrite = input(f"{filename} already exists. Do you want to overwrite it? (y/n): ")
@@ -86,16 +84,23 @@ def store_data(filename, is_before=False):
             print("Operation cancelled.")
             return
     
-    data = get_AP_status()
+    data = get_AP_status(aruba_os8)
         
     with open(filename, 'w') as f:
         json.dump(data, f)
-
+    
 def load_ap_data(filename):
     """Load AP data from a JSON file"""
-    with open(filename) as f:
-        data = json.load(f)
-        return data['AP Database']
+    try:
+        with open(filename) as f:
+            data = json.load(f)
+            return data['AP Database']
+    except FileNotFoundError:
+        print(f"The file {filename} was not found.")
+        return None
+    except json.JSONDecodeError:
+        print(f"An error occurred while decoding the JSON data in {filename}.")
+        return None
 
 def color_status(status):
     """Return colored status"""
@@ -174,13 +179,14 @@ def compare_aps(before, after):
     print(f"Number of APs Missing: {Fore.MAGENTA}{missing_aps}{Style.RESET_ALL}")
 
 def main():
+    aruba_os8 = ArubaOS_8(variables.aos8api['base_url'])
     args = get_args()
 
     if args.before:
-        store_data('before.json', is_before=True)
+        store_data(BEFORE_FILE, aruba_os8, is_before=True)
 
     elif args.after:
-        store_data('after.json')
+        store_data(AFTER_FILE, aruba_os8,)
 
     elif args.compare:
         
