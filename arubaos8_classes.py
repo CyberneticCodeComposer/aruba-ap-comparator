@@ -16,22 +16,26 @@ class ArubaOS_8:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.logout()
-
+    
     def login(self):
         """Returns the UIDARUBA session cookie."""
-        url = self.base_url + "/api/login"
+        url = f"{self.base_url}/api/login"
         creds = {'username': variables.aos8api['username'],
-                 'password': variables.aos8api['password']}
+                'password': variables.aos8api['password']}
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            resp = self.session.post(url, creds, verify=False)
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                resp = self.session.post(url, creds, verify=False)
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred while making the request: {e}")
+            return None
 
         return json.loads(resp.text)['_global_result']['UIDARUBA']
 
     def logout(self):
         """Logs out from the controller."""
-        url = self.base_url + "/api/logout"
+        url = f"{self.base_url}/api/logout"
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -52,11 +56,8 @@ class ArubaOS_8:
         show_command = "command=show%20ap%20database%20long"
         
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
+
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
@@ -72,11 +73,7 @@ class ArubaOS_8:
         show_command = "command=show%20ap%20database%20long"
         
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
@@ -103,11 +100,7 @@ class ArubaOS_8:
         show_command = "command=" + str(command)
 
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
@@ -123,11 +116,7 @@ class ArubaOS_8:
         show_command = "command=" + str(command)
 
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
@@ -144,11 +133,8 @@ class ArubaOS_8:
         show_command = "command=" + str(command)
 
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
+
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
@@ -179,11 +165,7 @@ class Controller(ArubaOS_8):
         show_command = "command=show%20ap%20bss-table"
 
         # Format the URL
-        url = "{}{}?{}&UIDARUBA={}".format(
-            self.base_url,
-            api_page,
-            show_command,
-            self.uidaruba)
+        url = f"{self.base_url}{api_page}?{show_command}&UIDARUBA={self.uidaruba}"
         logging.info(f"URL : {url}")
 
         with warnings.catch_warnings():
