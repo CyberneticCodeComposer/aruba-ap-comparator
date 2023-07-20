@@ -31,7 +31,12 @@ class ArubaOS_8:
             print(f"An error occurred while making the request: {e}")
             return None
 
-        return json.loads(resp.text)['_global_result']['UIDARUBA']
+        try:
+            return json.loads(resp.text)['_global_result']['UIDARUBA']
+        except KeyError:
+            print(f"Unexpected API response: {resp.text}")
+            return None
+
 
     def logout(self):
         """Logs out from the controller."""

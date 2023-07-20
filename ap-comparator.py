@@ -46,8 +46,11 @@ python ap_comparator.py --compare
 
 Some TODO:
 
-    - Add functionality to display the modified datetime of the before and after files
-    - Add functionality to calculate and display the time difference between before/after files
+    - Add better logging to track script execution
+    - Improve validation of JSON data structure
+    - Expand script to support AOS 10
+    - Add option to output comparison results to a CSV
+    - Add PyTest test cases
 
 """
 
@@ -152,6 +155,8 @@ def compare_aps(before, after):
     # Create a dictionary from the after data for easier access
     after_dict = {ap['Name']: ap for ap in after}
 
+    total_aps = len(before) + len(after_dict) - len(set(ap['Name'] for ap in before).intersection(after_dict.keys()))
+
     for before_ap in before:
         before_status = before_ap['Status'].split()[0]
         after_ap = after_dict.get(before_ap['Name'])
@@ -173,6 +178,7 @@ def compare_aps(before, after):
     print(table)
 
     # Print the summary
+    print(f"Total number of APs: {total_aps}")
     print(f"Total number of status changes: {down_to_up + up_to_down}")
     print(f"Number of APs that changed from Down to Up: {Fore.GREEN}{down_to_up}{Style.RESET_ALL}")
     print(f"Number of APs that changed from Up to Down: {Fore.RED}{up_to_down}{Style.RESET_ALL}")
@@ -186,7 +192,7 @@ def main():
         store_data(BEFORE_FILE, aruba_os8, is_before=True)
 
     elif args.after:
-        store_data(AFTER_FILE, aruba_os8,)
+        store_data(AFTER_FILE, aruba_os8)
 
     elif args.compare:
         

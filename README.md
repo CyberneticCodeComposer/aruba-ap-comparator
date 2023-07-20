@@ -1,65 +1,55 @@
-# Aruba AP Status Comparator
+# AP Status Comparator
 
-Aruba AP Status Comparator is a Python tool that compares the status of Aruba Access Points (APs) before and after maintenance. It fetches AP status data from the controller using the ArubaOS_8 class, stores the data in JSON format, and provides a comparative analysis highlighting any status changes.
+This script compares the status of wireless access points before and after maintenance, checking for any status changes. 
 
-## Features
-
-- Fetches and stores AP status data from the Aruba controller in JSON format
-- Compares AP status before and after maintenance
-- Highlights status changes in a readable format with color coding
-- Tracks and displays the time difference between data sets
-
-## Installation
-
-This project uses Python 3.8 and higher. It is recommended to use a virtual environment for running this project. Here's how you can set it up:
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/CyberneticCodeComposer/aruba-ap-comparator.git
-   cd aruba-ap-status-comparator
-   ```
-
-2. Create a new virtual environment:
-   ```bash
-   python3 -m venv env
-   ```
-
-3. Activate the virtual environment:
-   - On macOS and Linux:
-     ```bash
-     source env/bin/activate
-     ```
-   - On Windows:
-     ```bash
-     .\env\Scripts\activate
-     ```
-
-4. Install the required packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
+It utilizes the ArubaOS_8 API to retrieve AP status data from an Aruba controller. The before and after data is saved to JSON files, loaded back in, and compared. Any status changes are printed in a formatted table.
 
 ## Usage
 
-1. To get and store data before maintenance:
-   ```bash
-   python ap_comparator.py --before
-   ```
+The script accepts 3 arguments:
 
-2. To get and store data after maintenance:
-   ```bash
-   python ap_comparator.py --after
-   ```
+```
+python ap_comparator.py --before
+python ap_comparator.py --after 
+python ap_comparator.py --compare
+```
 
-3. To compare the before and after data:
-   ```bash
-   python ap_comparator.py --compare
-   ```
+* `--before` - Get latest data from controller and save to `before.json`
+* `--after` - Get latest data from controller and save to `after.json`
+* `--compare` - Load `before.json` and `after.json`, compare, and print results
 
-## Author
+## Examples
 
-This tool was developed by CyberneticCodeComposer, with assistance from OpenAI's ChatGPT.
+Get before status data:
 
-## License
+```
+python ap_comparator.py --before
+```
 
-This project is licensed under the terms of the MIT license.
+Get after status data:
+
+``` 
+python ap_comparator.py --after
+```
+
+Compare before and after data:
+
+```
+python ap_comparator.py --compare
+```
+
+## Output
+
+The script prints a summary of any AP status changes in an easy to read table with colored formatting. 
+
+For example:
+
+![Screenshot](Screenshot.png)
+
+## Requirements
+
+- Python 3
+- ArubaOS 8 API access
+- colorama
+- prettytable
+
