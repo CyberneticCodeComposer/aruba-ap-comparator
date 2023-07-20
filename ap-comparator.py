@@ -71,6 +71,7 @@ def get_args():
     group.add_argument('--before', action='store_true', help='Store data before maintenance')
     group.add_argument('--after', action='store_true', help='Store data after maintenance')
     group.add_argument('--compare', action='store_true', help='Compare before and after data sets')
+    group.add_argument('--down', action='store_true', help='Only show APs that were up before but are down now')
     return parser.parse_args()
 
 def get_AP_status(aruba_os8):
@@ -113,6 +114,8 @@ def color_status(status):
         return f"{Fore.RED}{status}{Style.RESET_ALL}"
     elif status == 'Missing':
         return f"{Fore.MAGENTA}{status}{Style.RESET_ALL}"
+    elif status == 'New':
+        return f"{Fore.CYAN}{status}{Style.RESET_ALL}"
 
 def get_file_modification_time(filename):
     """Get the last modification time of a file"""
@@ -144,36 +147,51 @@ def print_file_times(before_time, after_time):
     print(f"Time between before/after: {Fore.YELLOW}{days} days, {hours} hours, {minutes} minutes, {seconds} seconds{Style.RESET_ALL}")
 
 
-def compare_aps(before, after):
+def compare_aps(before, after, only_down=False):
     """Compare AP statuses between before and after"""
     # Create a table with headers
     table = PrettyTable(['AP Name', 'Before Status', 'After Status'])
     down_to_up = 0
     up_to_down = 0
     missing_aps = 0
+    new_aps = 0
 
-    # Create a dictionary from the after data for easier access
+    # Create a dictionary from the before and after data for easier access
+    before_dict = {ap['Name']: ap for ap in before}
     after_dict = {ap['Name']: ap for ap in after}
 
-    total_aps = len(before) + len(after_dict) - len(set(ap['Name'] for ap in before).intersection(after_dict.keys()))
+    total_aps = len(before_dict) + len(after_dict) - len(set(ap['Name'] for ap in before).intersection(after_dict.keys()))
 
+    # Check for APs in the before data that have changed or are missing in the after data
     for before_ap in before:
         before_status = before_ap['Status'].split()[0]
         after_ap = after_dict.get(before_ap['Name'])
 
         # Check if the AP is missing in the after data
         if after_ap is None:
-            table.add_row([before_ap['Name'], color_status(before_status), color_status('Missing')])
             missing_aps += 1
+            if not only_down:
+                table.add_row([before_ap['Name'], color_status(before_status), color_status('Missing')])
         else:
             after_status = after_ap['Status'].split()[0]
             if before_status != after_status:
                 # Add a row to the table for each AP with a status change
-                table.add_row([before_ap['Name'], color_status(before_status), color_status(after_status)])
-                if before_status == 'Down' and after_status == 'Up':
-                    down_to_up += 1
-                elif before_status == 'Up' and after_status == 'Down':
+                if before_status == 'Up' and after_status == 'Down':
                     up_to_down += 1
+                    if only_down:
+                        table.add_row([before_ap['Name'], color_status(before_status), color_status(after_status)])
+                elif before_status == 'Down' and after_status == 'Up':
+                    down_to_up += 1
+                    if not only_down:
+                        table.add_row([before_ap['Name'], color_status(before_status), color_status(after_status)])
+
+    # Check for APs in the after data that are new
+    for after_ap in after:
+        if before_dict.get(after_ap['Name']) is None:
+            new_aps += 1
+            if not only_down:
+                table.add_row([after_ap['Name'], color_status('Missing'), color_status('New')])
+
     # Print the table
     print(table)
 
@@ -183,6 +201,9 @@ def compare_aps(before, after):
     print(f"Number of APs that changed from Down to Up: {Fore.GREEN}{down_to_up}{Style.RESET_ALL}")
     print(f"Number of APs that changed from Up to Down: {Fore.RED}{up_to_down}{Style.RESET_ALL}")
     print(f"Number of APs Missing: {Fore.MAGENTA}{missing_aps}{Style.RESET_ALL}")
+    print(f"Number of New APs: {Fore.CYAN}{new_aps}{Style.RESET_ALL}")
+
+
 
 def main():
     aruba_os8 = ArubaOS_8(variables.aos8api['base_url'])
@@ -194,7 +215,7 @@ def main():
     elif args.after:
         store_data(AFTER_FILE, aruba_os8)
 
-    elif args.compare:
+    elif args.compare or args.down:
         
         # Read both data sets
         before_data = load_ap_data(BEFORE_FILE)
@@ -205,7 +226,7 @@ def main():
 
         print_file_times(before_time, after_time)
 
-        compare_aps(before_data, after_data)
+        compare_aps(before_data, after_data, only_down=args.down)
 
 if __name__ == "__main__":
     main()
